@@ -52,14 +52,22 @@ def cca(X,Y):
 
 # test
 if __name__ == "__main__":
-    nobs = 10
-    nxdim = 3
-    nydim = 3
-    x = np.arange(nxdim*nobs).reshape(nxdim,nobs)
-    y = np.arange(nydim*nobs).reshape(nydim,nobs)
+
+    baseA = np.array([[0, 1, 0],
+                      [1, 0, 0],
+                      [0, 0, 1]]).transpose()
+    baseB = np.array([[0, 0, 1],
+                      [0, 1, 0],
+                      [1, 0, 0]]).transpose()
+    latent = np.random.random((3,10))
+    x = dot(baseA, latent)
+    y = dot(baseB, latent)
     
     (A,B,lambdas) = cca(x,y)
     
+    print "latent=\n",latent
+    print "x=\n",x
+    print "y=\n",y
     print "lambdas=\n",lambdas
     print "A=\n",A  
     print "B=\n",B
