@@ -86,5 +86,11 @@ if __name__ == "__main__":
     #print "y=\n",y
     print "lambdas=\n",lambdas
     print "A=\n",A  
-    print "B=\n",B
-
+    print "B=\n",B    
+    atx = dot(A.T,x[:,0:5])
+    aty = dot(B.T,y[:,0:5])
+    diff = la.norm(atx-aty,'fro')
+    print "A^T * x=\n",atx
+    print "B^T * y=\n",aty
+    print "diff=",diff
+    assert diff <= 1e-10, 'Test failed'
