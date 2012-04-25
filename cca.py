@@ -39,35 +39,51 @@ def cca(X,Y):
     Sxx = 1.0/N * dot(X, X.transpose())
     Sxy = 1.0/N * dot(X, Y.transpose())
     Syy = 1.0/N * dot(Y, Y.transpose())  
-  
-    L = dot(Sxy, dot(la.pinv2(Syy), Sxy.transpose()))
-    lambda2s,A = la.eig(L, Sxx)
+    
+    epsilon = 1e-6
+    rSyy = Syy + epsilon * np.eye(Syy.shape[0])
+    rSxx = Sxx + epsilon * np.eye(Sxx.shape[0])   
+    irSyy = la.inv(rSyy)
+    
+    L = dot(Sxy, dot(irSyy, Sxy.transpose()))
+    lambda2s,A = la.eig(L, rSxx)
     lambdas = np.sqrt(lambda2s)  
     clambdas, cA = CleanAndSortEigenvalues(lambdas, A)         
-    B = dot(dot(dot(la.pinv2(Syy), Sxy.transpose()), cA), np.diag(1.0 / clambdas))
+    B = dot(irSyy, dot(Sxy.transpose(), dot(cA, np.diag(1.0 / clambdas))))
          
     return (cA, B, clambdas)
-
 
 
 # test
 if __name__ == "__main__":
 
-    baseA = np.array([[0, 1, 0],
-                      [1, 0, 0],
-                      [0, 0, 1]]).transpose()
-    baseB = np.array([[0, 0, 1],
-                      [0, 1, 0],
-                      [1, 0, 0]]).transpose()
-    latent = np.random.random((3,10))
+    if True:
+        # 3d test    
+        baseA = np.array([[0, 1, 0],
+                          [1, 0, 0],
+                          [0, 0, 1]]).transpose()
+        baseB = np.array([[0, 0, 1],
+                          [0, 1, 0],
+                          [1, 0, 0]]).transpose()
+        latent = np.random.random((3,1000))
+    else:
+        # 1d test
+        baseA = np.array([[0],
+                          [1],
+                          [2]])
+        baseB = np.array([[1],
+                          [0],
+                          [1]])
+        latent = np.random.random((1,1000))   
+    
     x = dot(baseA, latent)
     y = dot(baseB, latent)
     
     (A,B,lambdas) = cca(x,y)
     
-    print "latent=\n",latent
-    print "x=\n",x
-    print "y=\n",y
+    #print "latent=\n",latent
+    #print "x=\n",x
+    #print "y=\n",y
     print "lambdas=\n",lambdas
     print "A=\n",A  
     print "B=\n",B
