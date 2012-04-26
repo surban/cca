@@ -1,30 +1,13 @@
 import numpy as np
 from numpy import dot
 import scipy.linalg as la
-
-class EigenValueVector:
-    def __init__(self, value, vector):
-        self.value = value
-        self.vector = vector
-               
-def CleanAndSortEigenvalues(eigenvalues, eigenvectors):
-    evs = []
-    for i in range(0, len(eigenvalues)):
-        eva = eigenvalues[i]
-        if eva.imag == 0:
-            ev = EigenValueVector(eigenvalues[i], eigenvectors[:,i])
-            evs.append(ev)
-            
-    evs.sort(key=lambda evv: evv.value, reverse=True)
-    
-    sevals = np.zeros(len(evs))
-    sevecs = np.zeros((eigenvectors.shape[0], len(evs)))
-        
-    for i in range(0, len(evs)):
-            sevals[i] = evs[i].value.real
-            sevecs[:,i] = evs[i].vector
-            
-    return (sevals, sevecs)
+              
+def clean_and_sort_eigenvalues(eigenvalues, eigenvectors):  
+    evs = [(va,ve) for va,ve in zip(eigenvalues,eigenvectors.T) if va.imag == 0]           
+    evs.sort(key=lambda evv: evv[0], reverse=True)   
+    sevals = np.array([va.real for va,_ in evs])
+    sevecs = np.array([ve for _,ve in evs]).T                   
+    return sevals, sevecs
 
 def cca(X,Y):
     """Canonical Correlation Analysis
@@ -36,35 +19,35 @@ def cca(X,Y):
     """
     
     N = X.shape[1]
-    Sxx = 1.0/N * dot(X, X.transpose())
-    Sxy = 1.0/N * dot(X, Y.transpose())
-    Syy = 1.0/N * dot(Y, Y.transpose())  
+    Sxx = 1.0/N * dot(X, X.T)
+    Sxy = 1.0/N * dot(X, Y.T)
+    Syy = 1.0/N * dot(Y, Y.T)  
     
     epsilon = 1e-6
     rSyy = Syy + epsilon * np.eye(Syy.shape[0])
     rSxx = Sxx + epsilon * np.eye(Sxx.shape[0])   
     irSyy = la.inv(rSyy)
     
-    L = dot(Sxy, dot(irSyy, Sxy.transpose()))
+    L = dot(Sxy, dot(irSyy, Sxy.T))
     lambda2s,A = la.eig(L, rSxx)
     lambdas = np.sqrt(lambda2s)  
-    clambdas, cA = CleanAndSortEigenvalues(lambdas, A)         
-    B = dot(irSyy, dot(Sxy.transpose(), dot(cA, np.diag(1.0 / clambdas))))
+    clambdas, cA = clean_and_sort_eigenvalues(lambdas, A)         
+    B = dot(irSyy, dot(Sxy.T, dot(cA, np.diag(1.0 / clambdas))))
          
     return (cA, B, clambdas)
 
 
 # test
 if __name__ == "__main__":
-
+    
     if True:
         # 3d test    
         baseA = np.array([[0, 1, 0],
                           [1, 0, 0],
-                          [0, 0, 1]]).transpose()
+                          [0, 0, 1]]).T
         baseB = np.array([[0, 0, 1],
                           [0, 1, 0],
-                          [1, 0, 0]]).transpose()
+                          [1, 0, 0]]).T
         latent = np.random.random((3,1000))
     else:
         # 1d test
